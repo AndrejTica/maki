@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Field, Session, SQLModel, create_engine, except_, select
 from fastapi.middleware.cors import CORSMiddleware
-from data_creator import DataCreator
 
 sqlite_url = f"sqlite:///datadb.db"
 connect_args = {"check_same_thread": False}
@@ -36,6 +35,9 @@ origins = [
     "http://127.0.0.1:8080",
     "http://127.0.0.1:8080/data",
     "http://127.0.0.1:8080/data/all",
+    "http://127.0.0.1:9000",
+    "http://127.0.0.1:9000/data",
+    "http://127.0.0.1:9000/data/all",
 ]
 
 app.add_middleware(

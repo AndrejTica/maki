@@ -15,7 +15,7 @@ def send_value_to_endpoint(value):
 
 if __name__ == "__main__":
     while True:
-        random_value = random.randint(15, 30)
+        random_value = round(random.uniform(0, 45), 1)
         send_value_to_endpoint(random_value)
         time.sleep(2)  # Wait for 2 seconds before sending the next value
 
