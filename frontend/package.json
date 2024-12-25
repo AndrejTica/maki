@@ -99,7 +99,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack"
+    "build": "webpack --mode=development",
+    "start": "webpack-dev-server --config webpack.config.js --hot"
   },
   "keywords": [],
   "author": "",
