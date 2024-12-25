@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" href="./favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+
+  <section id="sidebar">
+    <section class="title-container">
+      <img src="speedometer.svg" width="40px" alt="logo" />
+      <h1>Sensors</h1>
+    </section>
+    <section class="links-container">
+      <div class="links">
+        <div class="icon">
+          <i class="fas fa-house-user"></i>
+        </div>
+        <a href="#dashboard"><span>Sensors</span></a>
+
+      </div>
+      <div class="links">
+        <div class="icon">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <a href="#analytics"><span>Analytics</span></a>
+      </div>
+      <div class="links">
+        <div class="icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <a href="#alerts"><span>Alerts</span></a>
+      </div>
+      <div class="links">
+        <div class="icon">
+          <i class="fas fa-cog"></i>
+        </div>
+        <a href="#settings"><span>Settings</span></a>
+      </div>
+    </section>
+  </section>
+
+  <section id="main-dashboard-content">
+    <section id="grid-container">
+      <!--<div id="welcome-title">Welcome!</div>-->
+      <div id='gaugeDiv'></div>
+      <div id="lineDiv"></div>
+    </section>
+  </section>
+
+  <script src="./main.js"></script>
+
+</body>
+
+</html>

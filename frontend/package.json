@@ -100,7 +100,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode=development",
-    "start": "webpack-dev-server --config webpack.config.js --hot"
+    "start": "webpack serve --mode=development"
   },
   "keywords": [],
   "author": "",
