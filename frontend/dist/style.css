@@ -57,22 +57,26 @@ body {
 }
 
 .links a {
-  text-decoration: none; /* Remove underline */
-  color: inherit; /* Inherit text color from parent */
-  display: inline-block; /* Ensure clickable area matches the span size */
+    text-decoration: none;
+    /* Remove underline */
+    color: inherit;
+    /* Inherit text color from parent */
+    display: inline-block;
+    /* Ensure clickable area matches the span size */
 }
 
 .links a:hover {
-  color: #007bff; /* Optional: Change color on hover */
+    color: #007bff;
+    /* Optional: Change color on hover */
 }
 
 
-#main-dashboard-content {
 
+#main-dashboard-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-left: 300px;
+    margin-left: 220px;
     box-sizing: border-box;
     height: 100%;
     padding: 20px 25px;
@@ -80,22 +84,39 @@ body {
 }
 
 
-#welcome-title {
-    font-size: 24px;
-    font-weight: lighter;
-    margin: 20px 5px;
-}
-
-#grid-container {
-    grid-template-columns: 75% auto;
-    grid-gap: 25px;
-}
-
-#lineDiv {
-    width: 80vw;
+#main-analytics-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+    height: 100%;
+    padding: 20px 25px;
+    transition: 400ms margin-left;
+}
+
+/**/
+/**/
+/*#welcome-title {*/
+/*    font-size: 24px;*/
+/*    font-weight: lighter;*/
+/*    margin: 20px 5px;*/
+/*}*/
+/**/
+/*#grid-container {*/
+/*    grid-template-columns: 75% auto;*/
+/*    grid-gap: 25px;*/
+/*}*/
+/**/
+#lineDivTemp {
+    width: 85vw;
+}
+
+.alert-message {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 /*#gaugeDiv {*/
