@@ -21,33 +21,67 @@ async function getData(all) {
   }
 }
 
+async function create_gauge(sensor_type, gauge_div) {
+  const gaugeConfig = {
+    temp: {
+      text: "Temperature",
+      range: [null, 45],
+      colors: [
+        { range: [0, 18], color: "lightblue" },
+        { range: [18, 24], color: "green" },
+        { range: [24, 45], color: "red" }
+      ]
+    },
+    co2: {
+      text: "CO2",
+      range: [50, 200],
+      colors: [{ range: [24, 45], color: "red" }]
+    }
+  };
 
-async function create_gauge() {
-  var data_gauge = [
+  const config = gaugeConfig[sensor_type];
+  if (!config) {
+    console.error(`Unknown sensor type: ${sensor_type}`);
+    return;
+  }
+
+  const data_gauge = [
     {
       value: 0,
-      title: { text: "Speed" },
+      title: { text: config.text },
       type: "indicator",
       mode: "gauge+number+delta",
       gauge: {
-        axis: { range: [null, 45] },
+        axis: { range: config.range },
         bar: { color: "black" },
-        steps: [
-          { range: [0, 18], color: "lightblue" },
-          { range: [18, 24], color: "green" },
-          { range: [24, 45], color: "red" }
-        ],
+        steps: config.colors
       }
     }
   ];
-  Plotly.newPlot('gaugeDiv', data_gauge, {
-    width: 600, height: 500, margin: { t: 0, b: 0 }
+
+  Plotly.newPlot(gauge_div, data_gauge, {
+    width: 600,
+    height: 500,
+    margin: { t: 0, b: 0 }
   });
 }
 
-async function update_gauge() {
-  const mydata_gauge = await getData(false);
-  Plotly.restyle('gaugeDiv', { value: [mydata_gauge.value] }, 0);
+//async function update_chart(chart_div) {
+async function update_chart(chart_type) {
+  if (chart_type == "gauge") {
+    const chart_data = await getData(false);
+    Plotly.restyle('gaugeDivTemp', { value: [chart_data.value] }, 0);
+    return;
+  } else if (chart_type == "line") {
+    const chart_data = await getData(true);
+    const mydata_map_line_value = chart_data.map((mydata) => mydata.value)
+    const mydata_map_line_time = chart_data.map((mydata) => mydata.time)
+    Plotly.restyle('lineDiv', { y: [mydata_map_line_value] }, 0);
+    Plotly.restyle('lineDiv', { x: [mydata_map_line_time] }, 0);
+    return;
+  } else {
+    console.error(`Unknown chart type: ${chart_type}`);
+  }
 }
 
 
@@ -62,48 +96,26 @@ async function create_line() {
   );
 }
 
-async function update_line() {
-  const mydata_line = await getData(true);
-  const mydata_map_line_value = mydata_line.map((mydata) => mydata.value)
-  const mydata_map_line_time = mydata_line.map((mydata) => mydata.time)
-  Plotly.restyle('lineDiv', { y: [mydata_map_line_value] }, 0);
-  Plotly.restyle('lineDiv', { x: [mydata_map_line_time] }, 0);
-}
+const clickableLinks = document.querySelectorAll('#sidebar .links a');
 
+clickableLinks.forEach((link) => {
+  if (link.textContent == "Dashboard") {
+    link.addEventListener("click", (event) => {
+      const gridContainer = document.querySelector('#main-dashboard-content #grid-container');
+      if (!document.getElementById('welcome-title')) {
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.id = 'welcome-title';
+        welcomeDiv.textContent = 'Welcome to the dashboard';
+        gridContainer.insertBefore(welcomeDiv, gridContainer.firstChild);
 
-//document.getElementById("line_button").addEventListener("click", function() {
-//  update_line()
-//});
-
-
-// Select all the clickable spans inside the sidebar
-const clickableSpans = document.querySelectorAll('#sidebar .links a');
-
-// Add a click event listener to each span
-clickableSpans.forEach(span => {
-  span.addEventListener('click', (event) => {
-
-    const gridContainer = document.querySelector('#main-dashboard-content #grid-container');
-
-    // Check if the welcome-title div already exists to avoid duplicates
-    if (!document.getElementById('welcome-title')) {
-      // Create the welcome-title div dynamically
-      const welcomeDiv = document.createElement('div');
-      welcomeDiv.id = 'welcome-title'; // Set the ID
-      welcomeDiv.textContent = 'Welcome!'; // Set the text content
-
-      // Append the new div to the grid-container
-      gridContainer.insertBefore(welcomeDiv, gridContainer.firstChild);
-    }
-
-    create_gauge();
-
-    setInterval(update_gauge, 2000);
-
-    create_line()
-
-    setInterval(update_line, 2000)
-  });
+        create_gauge("temp", "gaugeDivTemp");
+        //create_gauge("co2", "gaugeDivCo2");
+        setInterval(update_chart.bind(null, "gauge"), 2000);
+        create_line()
+        setInterval(update_chart.bind(null, "line"), 2000)
+      }
+    })
+  }
 });
 
 
