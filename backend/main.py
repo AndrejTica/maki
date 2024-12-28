@@ -1,8 +1,8 @@
-from typing import Annotated, Literal, Sequence, Union
+from typing import Annotated, Literal, Sequence, TypeVar, Union, dataclass_transform
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Query
-from sqlmodel import Field, Session, SQLModel, create_engine, except_, select
+from sqlmodel import Field, Session, SQLModel, create_engine, select
 from fastapi.middleware.cors import CORSMiddleware
 
 sqlite_url = f"sqlite:///datadb.db"
@@ -11,11 +11,10 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
 class Data(SQLModel, table=True):
-    # name: Literal["temp", "co2"] = Field(index=True)
     id: int = Field(default=None, primary_key=True)
+    type: str = Field(default=None, index=True)
     value: float = Field(default=None, index=True)
     time: str | None = Field(default=None, index=True)
-
 
 def get_session():
     with Session(engine) as session:
@@ -48,38 +47,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def commit_and_add_time(session: SessionDep, data: Data) -> None:
+    data.time = datetime.now().strftime("%H:%M:%S")
+    session.add(data)
+    session.commit()
+    session.refresh(data)
+
 @app.get("/")
 async def read_index():
     return "Hello World"
 
 @app.post("/data/")
 def create_data(data: Data, session: SessionDep) -> Data:
-    data.time = datetime.now().strftime("%H:%M:%S")
-    session.add(data)
-    session.commit()
-    session.refresh(data)
-    return data
-
-@app.get("/data/all")
-def read_data_all(session: SessionDep) -> Sequence[Data]:
-    data = session.exec(select(Data)).all()
+    commit_and_add_time(session, data)
     return data 
 
-@app.get("/data/")
-def read_data(session: SessionDep) -> Data | None:
+@app.get("/data/{data_type}/all")
+def read_data_all(data_type: Literal["temp", "co2"], session: SessionDep) -> Sequence[Data]:
+    statement = select(Data).where(Data.type == data_type)
+    return session.exec(statement).all()
+
+@app.get("/data/{data_type}")
+def read_data(data_type: Literal["temp", "co2"], session: SessionDep) -> Data | None:
     try:
-        data = session.exec(select(Data)).all()[-1]
+        statement = select(Data).where(Data.type == data_type)
+        data = session.exec(statement).all()[-1]
     except IndexError:
         print("No data!")
         return None
     return data 
 
-@app.delete("/data/all")
-def delete_all_data(session: SessionDep) -> None:
-    for x in session.exec(select(Data)).all():
-        statement = select(Data).where(Data.id == x.id)
-        results = session.exec(statement)
-        data = results.one()
+@app.delete("/data/{data_type}/all")
+def delete_all_data(data_type: Literal["temp", "co2"], session: SessionDep) -> None:
+    """Delete all data of the specified type ('temp' or 'co2')."""
+    statement = select(Data).where(Data.type == data_type)
+    results = session.exec(statement).all()
+    for data in results:
         print(f"Data: {data} will be deleted")
         session.delete(data)
     session.commit()

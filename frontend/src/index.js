@@ -1,12 +1,12 @@
 import Plotly from 'plotly.js-dist-min'
 import { async } from 'regenerator-runtime';
 
-async function getData(all) {
+async function getData(type, all) {
   let url;
   if (all) {
-    url = "http://127.0.0.1:8000/data/all";
+    url = `http://127.0.0.1:8000/data/${type}/all`;
   } else {
-    url = "http://127.0.0.1:8000/data";
+    url = `http://127.0.0.1:8000/data/${type}`;
   }
   try {
     const response = await fetch(url);
@@ -34,8 +34,12 @@ async function create_gauge(sensor_type, gauge_div) {
     },
     co2: {
       text: "CO2",
-      range: [50, 250],
-      colors: [{ range: [24, 45], color: "red" }]
+      range: [250, 1500],
+      colors: [
+        { range: [250, 500], color: "green" },
+        { range: [500, 1000], color: "yellow" },
+        { range: [1000, 1500], color: "red" }
+      ]
     }
   };
 
@@ -68,11 +72,11 @@ async function create_gauge(sensor_type, gauge_div) {
 
 async function update_chart(chart_type, sensor_type) {
   if (chart_type == "gauge") {
-    const chart_data = await getData(false);
+    const chart_data = await getData(sensor_type == "temp" ? "temp" : "co2", false);
     Plotly.restyle(sensor_type == "temp" ? 'gaugeDivTemp' : "gaugeDivCo2", { value: [chart_data.value] }, 0);
     return;
   } else if (chart_type == "line") {
-    const chart_data = await getData(true);
+    const chart_data = await getData(sensor_type == "temp" ? "temp" : "co2", true);
     const mydata_map_line_value = chart_data.map((mydata) => mydata.value)
     const mydata_map_line_time = chart_data.map((mydata) => mydata.time)
     Plotly.restyle(sensor_type == "temp" ? 'lineDivTemp' : "lineDivCo2", { y: [mydata_map_line_value] }, 0);
@@ -94,15 +98,15 @@ async function create_line(sensor_type, line_div) {
 }
 
 async function clear_screen() {
-  try {clearInterval(intervallId1)} catch (error){}
-  try {clearInterval(intervallId2)} catch (error) {}
-  try {Plotly.purge("gaugeDivTemp")} catch (error) {}
-  try {Plotly.purge("gaugeDivCo2")} catch (error) {}
-  try {Plotly.purge("lineDivTemp")} catch (error) {}
-  try {Plotly.purge("lineDivCo2")} catch (error) {}
-  try {document.getElementById("alerts").remove()} catch (error) {}
-  try {document.getElementById("button_container").remove()} catch (error) {}
-  try {document.getElementById("clear_button").remove()} catch (error) {}
+  try { clearInterval(intervallId1) } catch (error) { }
+  try { clearInterval(intervallId2) } catch (error) { }
+  try { Plotly.purge("gaugeDivTemp") } catch (error) { }
+  try { Plotly.purge("gaugeDivCo2") } catch (error) { }
+  try { Plotly.purge("lineDivTemp") } catch (error) { }
+  try { Plotly.purge("lineDivCo2") } catch (error) { }
+  try { document.getElementById("alerts").remove() } catch (error) { }
+  try { document.getElementById("button_container").remove() } catch (error) { }
+  try { document.getElementById("clear_button").remove() } catch (error) { }
 }
 
 const clickableLinks = document.querySelectorAll('#sidebar .links a');
@@ -117,8 +121,8 @@ clickableLinks.forEach((link) => {
       clear_screen();
       create_gauge("temp", "gaugeDivTemp");
       create_gauge("co2", "gaugeDivCo2");
-      intervallId1 = setInterval(update_chart.bind(null, "gauge", "temp"), 2000);
-      intervallId2 = setInterval(update_chart.bind(null, "gauge", "co2"), 2000);
+      intervallId1 = setInterval(update_chart.bind(null, "gauge", "temp"), 1000);
+      intervallId2 = setInterval(update_chart.bind(null, "gauge", "co2"), 1000);
     })
   } else if (link.textContent == "Analytics") {
     link.addEventListener("click", (event) => {
@@ -127,8 +131,8 @@ clickableLinks.forEach((link) => {
       clear_screen();
       create_line("temp", "lineDivTemp");
       create_line("co2", "lineDivCo2");
-      intervallId1 = setInterval(update_chart.bind(null, "line", "temp"), 2000);
-      intervallId2 = setInterval(update_chart.bind(null, "line", "co2"), 2000);
+      intervallId1 = setInterval(update_chart.bind(null, "line", "temp"), 1000);
+      intervallId2 = setInterval(update_chart.bind(null, "line", "co2"), 1000);
     })
   } else if (link.textContent == "Alerts") {
     link.addEventListener("click", (event) => {
@@ -139,8 +143,6 @@ clickableLinks.forEach((link) => {
       const alertDiv = document.createElement('div');
       alertDiv.textContent = "No alerts yet!";
       alertDiv.classList.add('alert-message');
-
-      // Append the new alert message to the alerts container
       alertsDiv.appendChild(alertDiv);
     });
   } else if (link.textContent == "Settings") {
@@ -153,7 +155,7 @@ clickableLinks.forEach((link) => {
       clear_data_button.id = 'clear_button';
       clear_data_button.type = "button";
       clear_data_button.textContent = "Click Me!";
-      parentElement.appendChild(clear_data_button);
+      parentElement.append(clear_data_button);
       clear_data_button.addEventListener("click", () => {
         alert("Button clicked!");
       });
