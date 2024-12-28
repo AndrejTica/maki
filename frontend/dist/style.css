@@ -58,55 +58,14 @@ body {
 
 .links a {
     text-decoration: none;
-    /* Remove underline */
     color: inherit;
-    /* Inherit text color from parent */
     display: inline-block;
-    /* Ensure clickable area matches the span size */
 }
 
 .links a:hover {
     color: #007bff;
-    /* Optional: Change color on hover */
 }
 
-
-
-#main-dashboard-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-left: 220px;
-    box-sizing: border-box;
-    height: 100%;
-    padding: 20px 25px;
-    transition: 400ms margin-left;
-}
-
-
-#main-analytics-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-sizing: border-box;
-    height: 100%;
-    padding: 20px 25px;
-    transition: 400ms margin-left;
-}
-
-/**/
-/**/
-/*#welcome-title {*/
-/*    font-size: 24px;*/
-/*    font-weight: lighter;*/
-/*    margin: 20px 5px;*/
-/*}*/
-/**/
-/*#grid-container {*/
-/*    grid-template-columns: 75% auto;*/
-/*    grid-gap: 25px;*/
-/*}*/
-/**/
 #lineDivTemp {
     width: 85vw;
 }
@@ -119,34 +78,11 @@ body {
     border-radius: 4px;
 }
 
-/*#gaugeDiv {*/
-/*  height: 550px;*/
-/*  box-shadow: 0px 0px 15px 1px rgba(0, 0, 0, 0.1);*/
-/*  border-radius: 25px;*/
-/*  box-sizing: border-box;*/
-/*  padding: 50px;*/
-/*}*/
+#gaugeDivTemp {
+    margin-left: 250px;
+}
 
-/*@media (max-width: 1400px) {*/
-/*  #grid-container {*/
-/*    grid-template-columns: 100%;*/
-/*  }*/
-/*}*/
-/**/
-/*@media (max-width: 950px) {*/
-/*  .title-container h1 {*/
-/*    display: none;*/
-/*  }*/
-/*  .links span {*/
-/*    display: none;*/
-/*  }*/
-/*  #sidebar {*/
-/*    width: 75px;*/
-/*  }*/
-/*  #main-dashboard-content {*/
-/*    margin-left: 75px;*/
-/*  }*/
-/*  .title-container {*/
-/*    padding: 20px;*/
-/*  }*/
-/*}*/
+#gaugeDivCo2 {
+    margin-left: 250px;
+}
+

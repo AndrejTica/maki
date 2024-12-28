@@ -34,7 +34,7 @@ async function create_gauge(sensor_type, gauge_div) {
     },
     co2: {
       text: "CO2",
-      range: [50, 200],
+      range: [50, 250],
       colors: [{ range: [24, 45], color: "red" }]
     }
   };
@@ -93,6 +93,18 @@ async function create_line(sensor_type, line_div) {
   Plotly.newPlot(line_div, [{ x: [0], y: [0], type: 'lines' }], layout);
 }
 
+async function clear_screen() {
+  try {clearInterval(intervallId1)} catch (error){}
+  try {clearInterval(intervallId2)} catch (error) {}
+  try {Plotly.purge("gaugeDivTemp")} catch (error) {}
+  try {Plotly.purge("gaugeDivCo2")} catch (error) {}
+  try {Plotly.purge("lineDivTemp")} catch (error) {}
+  try {Plotly.purge("lineDivCo2")} catch (error) {}
+  try {document.getElementById("alerts").remove()} catch (error) {}
+  try {document.getElementById("button_container").remove()} catch (error) {}
+  try {document.getElementById("clear_button").remove()} catch (error) {}
+}
+
 const clickableLinks = document.querySelectorAll('#sidebar .links a');
 
 let intervallId1;
@@ -102,8 +114,7 @@ clickableLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       clearInterval(intervallId1);
       clearInterval(intervallId2);
-      Plotly.purge("lineDivTemp");
-      Plotly.purge("lineDivCo2");
+      clear_screen();
       create_gauge("temp", "gaugeDivTemp");
       create_gauge("co2", "gaugeDivCo2");
       intervallId1 = setInterval(update_chart.bind(null, "gauge", "temp"), 2000);
@@ -113,8 +124,7 @@ clickableLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       clearInterval(intervallId1);
       clearInterval(intervallId2);
-      Plotly.purge("gaugeDivTemp");
-      Plotly.purge("gaugeDivCo2");
+      clear_screen();
       create_line("temp", "lineDivTemp");
       create_line("co2", "lineDivCo2");
       intervallId1 = setInterval(update_chart.bind(null, "line", "temp"), 2000);
@@ -122,18 +132,31 @@ clickableLinks.forEach((link) => {
     })
   } else if (link.textContent == "Alerts") {
     link.addEventListener("click", (event) => {
-      let alertsDiv = document.getElementById('main-alerts-content');
-      if (!alertsDiv) {
-        alertsDiv = document.createElement('div');
-        alertsDiv.id = 'alerts';
-        document.body.appendChild(alertsDiv); 
-      }
+      clear_screen();
+      const alertsDiv = document.createElement('div');
+      alertsDiv.id = 'alerts';
+      document.body.appendChild(alertsDiv);
       const alertDiv = document.createElement('div');
       alertDiv.textContent = "No alerts yet!";
       alertDiv.classList.add('alert-message');
 
       // Append the new alert message to the alerts container
       alertsDiv.appendChild(alertDiv);
+    });
+  } else if (link.textContent == "Settings") {
+    link.addEventListener("click", (event) => {
+      clear_screen();
+      const parentElement = document.createElement("div");
+      parentElement.id = 'button_container';
+      document.body.appendChild(parentElement)
+      const clear_data_button = document.createElement('button');
+      clear_data_button.id = 'clear_button';
+      clear_data_button.type = "button";
+      clear_data_button.textContent = "Click Me!";
+      parentElement.appendChild(clear_data_button);
+      clear_data_button.addEventListener("click", () => {
+        alert("Button clicked!");
+      });
     });
   }
 });
