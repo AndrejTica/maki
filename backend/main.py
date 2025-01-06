@@ -11,10 +11,14 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
 class Data(SQLModel, table=True):
+    __tablename__ = "Data"
     id: int = Field(default=None, primary_key=True)
     type: str = Field(default=None, index=True)
     value: float = Field(default=None, index=True)
     time: str | None = Field(default=None, index=True)
+    day: int | None = Field(default=None, index=True)
+    month: int | None = Field(default=None, index=True)
+    year: int | None = Field(default=None, index=True)
 
 def get_session():
     with Session(engine) as session:
@@ -47,8 +51,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# def calc_average(data_type: Literal["temp", "co2"], session: SessionDep) -> float:
+#     statement = select(Data).where(Data.type == data_type)
+#     return session.exec(statement).all()
+
 def commit_and_add_time(session: SessionDep, data: Data) -> None:
     data.time = datetime.now().strftime("%H:%M:%S")
+    data.day = datetime.now().day
+    data.month = datetime.now().month
+    data.year = datetime.now().year
     session.add(data)
     session.commit()
     session.refresh(data)
@@ -62,15 +73,33 @@ def create_data(data: Data, session: SessionDep) -> Data:
     commit_and_add_time(session, data)
     return data 
 
-@app.get("/data/{data_type}/all")
-def read_data_all(data_type: Literal["temp", "co2"], session: SessionDep) -> Sequence[Data]:
-    statement = select(Data).where(Data.type == data_type)
+@app.get("/data/{data_type}/{date}/all")
+def read_data_all(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data]:
+    day: int = int(date.split("-")[2])
+    month: int = int(date.split("-")[1])
+    year: int = int(date.split("-")[0])
+    statement = (
+        select(Data)
+        .where(Data.type == data_type)
+        .where(Data.year == year)
+        .where(Data.month == month)
+        .where(Data.day == day)
+    )
     return session.exec(statement).all()
 
-@app.get("/data/{data_type}")
-def read_data(data_type: Literal["temp", "co2"], session: SessionDep) -> Data | None:
+@app.get("/data/{data_type}/{date}")
+def read_data(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Data | None:
     try:
-        statement = select(Data).where(Data.type == data_type)
+        day: int = int(date.split("-")[2])
+        month: int = int(date.split("-")[1])
+        year: int = int(date.split("-")[0])
+        statement = (
+            select(Data)
+            .where(Data.type == data_type)
+            .where(Data.year == year)
+            .where(Data.month == month)
+            .where(Data.day == day)
+        )
         data = session.exec(statement).all()[-1]
     except IndexError:
         print("No data!")

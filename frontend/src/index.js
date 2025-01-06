@@ -1,12 +1,11 @@
 import Plotly from 'plotly.js-dist-min'
-import { async } from 'regenerator-runtime';
 
-async function getData(type, all) {
+async function getData(type, date, all) {
   let url;
   if (all) {
-    url = `http://127.0.0.1:8000/data/${type}/all`;
+    url = `http://127.0.0.1:8000/data/${type}/${date}/all`;
   } else {
-    url = `http://127.0.0.1:8000/data/${type}`;
+    url = `http://127.0.0.1:8000/data/${type}/${date}`;
   }
   try {
     const response = await fetch(url);
@@ -70,17 +69,31 @@ async function create_gauge(sensor_type, gauge_div) {
   });
 }
 
-async function update_chart(chart_type, sensor_type) {
+function getCurrentDate() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+async function update_chart(chart_type, sensor_type, date) {
   if (chart_type == "gauge") {
-    const chart_data = await getData(sensor_type == "temp" ? "temp" : "co2", false);
-    Plotly.restyle(sensor_type == "temp" ? 'gaugeDivTemp' : "gaugeDivCo2", { value: [chart_data.value] }, 0);
+    const chart_data = await getData(sensor_type == "temp" ? "temp" : "co2", date, false);
+    try {
+      Plotly.restyle(sensor_type == "temp" ? 'gaugeDivTemp' : "gaugeDivCo2", { value: [chart_data.value] }, 0);
+    } catch (error) { }
     return;
   } else if (chart_type == "line") {
-    const chart_data = await getData(sensor_type == "temp" ? "temp" : "co2", true);
+    const chart_data = await getData(sensor_type == "temp" ? "temp" : "co2", date, true);
     const mydata_map_line_value = chart_data.map((mydata) => mydata.value)
     const mydata_map_line_time = chart_data.map((mydata) => mydata.time)
-    Plotly.restyle(sensor_type == "temp" ? 'lineDivTemp' : "lineDivCo2", { y: [mydata_map_line_value] }, 0);
-    Plotly.restyle(sensor_type == "temp" ? 'lineDivTemp' : "lineDivCo2", { x: [mydata_map_line_time] }, 0);
+    try {
+      Plotly.restyle(sensor_type == "temp" ? 'lineDivTemp' : "lineDivCo2", { y: [mydata_map_line_value] }, 0);
+    } catch (error) { }
+    try {
+      Plotly.restyle(sensor_type == "temp" ? 'lineDivTemp' : "lineDivCo2", { x: [mydata_map_line_time] }, 0);
+    } catch (error) { }
     return;
   } else {
     console.error(`Unknown chart type: ${chart_type}`);
@@ -97,7 +110,7 @@ async function create_line(sensor_type, line_div) {
   Plotly.newPlot(line_div, [{ x: [0], y: [0], type: 'lines' }], layout);
 }
 
-async function clear_screen() {
+async function clear_screen(spare = true) {
   try { clearInterval(intervallId1) } catch (error) { }
   try { clearInterval(intervallId2) } catch (error) { }
   try { Plotly.purge("gaugeDivTemp") } catch (error) { }
@@ -107,6 +120,38 @@ async function clear_screen() {
   try { document.getElementById("alerts").remove() } catch (error) { }
   try { document.getElementById("button_container").remove() } catch (error) { }
   try { document.getElementById("clear_button").remove() } catch (error) { }
+  try { document.getElementById("textDiv").remove() } catch (error) { }
+  if (spare) {
+    try { document.getElementById("dateInput").remove() } catch (error) { }
+  }
+}
+
+async function graph_picker() {
+  //<input type="date" id="start" name="trip-start" value="2018-07-22" min="2018-01-01" max="2018-12-31" />
+  const text_div = document.createElement('div');
+  text_div.id = "textDiv";
+  text_div.innerText = "Select the date for the sensor data."
+  const date_picker = document.createElement('input');
+  date_picker.type = "date";
+  date_picker.id = "dateInput";
+  const parent_container = document.getElementById("flex-container-line")
+  parent_container.prepend(date_picker);
+  parent_container.prepend(text_div);
+  const date_value = document.getElementById('dateInput');
+  date_value.addEventListener('change', function() {
+    clear_screen(false);
+    var date = date_value.value.split("-");
+    var day = date[2];
+    var month = date[1];
+    var year = date[0];
+    var full_date = `${year}-${month}-${day}`;
+    create_line("temp", "lineDivTemp");
+    create_line("co2", "lineDivCo2");
+    intervallId1 = setInterval(update_chart.bind(null, "line", "temp", full_date), 1000);
+    intervallId2 = setInterval(update_chart.bind(null, "line", "co2", full_date), 1000);
+  })
+  //needs to wait for input first
+
 }
 
 const clickableLinks = document.querySelectorAll('#sidebar .links a');
@@ -121,18 +166,16 @@ clickableLinks.forEach((link) => {
       clear_screen();
       create_gauge("temp", "gaugeDivTemp");
       create_gauge("co2", "gaugeDivCo2");
-      intervallId1 = setInterval(update_chart.bind(null, "gauge", "temp"), 1000);
-      intervallId2 = setInterval(update_chart.bind(null, "gauge", "co2"), 1000);
+      intervallId1 = setInterval(update_chart.bind(null, "gauge", "temp", getCurrentDate()), 1000);
+      intervallId2 = setInterval(update_chart.bind(null, "gauge", "co2", getCurrentDate()), 1000);
     })
   } else if (link.textContent == "Analytics") {
     link.addEventListener("click", (event) => {
       clearInterval(intervallId1);
       clearInterval(intervallId2);
       clear_screen();
-      create_line("temp", "lineDivTemp");
-      create_line("co2", "lineDivCo2");
-      intervallId1 = setInterval(update_chart.bind(null, "line", "temp"), 1000);
-      intervallId2 = setInterval(update_chart.bind(null, "line", "co2"), 1000);
+      graph_picker();
+
     })
   } else if (link.textContent == "Alerts") {
     link.addEventListener("click", (event) => {
@@ -162,5 +205,4 @@ clickableLinks.forEach((link) => {
     });
   }
 });
-
 
