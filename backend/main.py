@@ -49,9 +49,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# def calc_average(data_type: Literal["temp", "co2"], session: SessionDep) -> float:
-#     statement = select(Data).where(Data.type == data_type)
-#     return session.exec(statement).all()
+def calc_average(data: Sequence[Data]) -> float:
+    data_len: int = len(data)
+    data_acc: float = 0.0
+    for value in data:
+        data_acc = data_acc + float(value.value)
+    final_average = data_acc / data_len
+    return final_average 
 
 def commit_and_add_time(session: SessionDep, data: Data) -> None:
     data.time = datetime.now().strftime("%H:%M:%S")
@@ -86,8 +90,22 @@ def create_data(data: Data, session: SessionDep) -> Data:
     return data 
 
 @app.get("/data/{data_type}/{date}/all")
-def read_data_all(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data]:
-    return get_query(data_type, date, session)
+def read_data_all(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data] | None:
+    try:
+        return get_query(data_type, date, session)
+    except IndexError:
+        print("No data!")
+        return None
+
+@app.get("/data/{data_type}/{date}/average")
+def read_data_average(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> float | None:
+    try:
+        data = get_query(data_type, date, session)
+    except IndexError:
+        print("No data!")
+        return None
+    average = calc_average(data)
+    return average 
 
 @app.get("/data/{data_type}/{date}")
 def read_data(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Data | None:
