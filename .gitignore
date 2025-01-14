@@ -1,5 +1,5 @@
 # Ignore the node_modules folder
-node_modules/
-__pycache__/
-venv/
+frontend/node_modules/
+backend/__pycache__/
+backend/venv/
 

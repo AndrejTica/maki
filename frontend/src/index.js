@@ -20,6 +20,23 @@ async function getData(type, date, all) {
   }
 }
 
+async function getDataAverage(type, date) {
+  let url;
+  url = `http://127.0.0.1:8000/data/${type}/${date}/average`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const json = await response.json();
+    console.log("Fetched Data:", json);
+    return json;
+  } catch (error) {
+    console.error("Error fetching data:", error.message);
+  }
+}
+
+
 async function create_gauge(sensor_type, gauge_div) {
   const gaugeConfig = {
     temp: {
@@ -104,6 +121,8 @@ async function update_chart(chart_type, sensor_type, date) {
 //LINE CHART ------------------
 
 async function create_line(sensor_type, line_div) {
+
+
   var layout = {
     title: { text: sensor_type == "temp" ? "Temperature" : "Co2" }
   };
@@ -121,9 +140,32 @@ async function clear_screen(spare = true) {
   try { document.getElementById("button_container").remove() } catch (error) { }
   try { document.getElementById("clear_button").remove() } catch (error) { }
   try { document.getElementById("textDiv").remove() } catch (error) { }
+  try { document.getElementById("averageDivCo2").remove() } catch (error) { }
+  try { document.getElementById("averageDivTemp").remove() } catch (error) { }
   if (spare) {
     try { document.getElementById("dateInput").remove() } catch (error) { }
   }
+}
+
+async function create_averages(date) {
+  const date_input = document.getElementById("dateInput");
+  const average_co2 = await getDataAverage("co2", date);
+  const average_div_co2 = document.createElement('div');
+  average_div_co2.id = "averageDivCo2";
+  average_div_co2.innerText = `Average CO2: ${Math.round(average_co2 * 100) / 100}`;
+  average_div_co2.style.display = "inline-block";
+  average_div_co2.style.color = "blue";
+  average_div_co2.style.marginLeft = "100px";
+  date_input.insertAdjacentElement("afterend", average_div_co2);
+
+  const average_temp = await getDataAverage("temp", date);
+  const average_div_temp = document.createElement('div');
+  average_div_temp.id = "averageDivTemp";
+  average_div_temp.innerText = `Average temperature: ${Math.round(average_temp * 100) / 100}`;
+  average_div_temp.style.display = "inline-block";
+  average_div_temp.style.color = "blue";
+  average_div_temp.style.marginLeft = "100px";
+  date_input.insertAdjacentElement("afterend", average_div_temp);
 }
 
 async function graph_picker() {
@@ -147,8 +189,11 @@ async function graph_picker() {
     var full_date = `${year}-${month}-${day}`;
     create_line("temp", "lineDivTemp");
     create_line("co2", "lineDivCo2");
+    create_averages(full_date);
     intervallId1 = setInterval(update_chart.bind(null, "line", "temp", full_date), 1000);
     intervallId2 = setInterval(update_chart.bind(null, "line", "co2", full_date), 1000);
+
+
   })
   //needs to wait for input first
 
@@ -175,6 +220,7 @@ clickableLinks.forEach((link) => {
       clearInterval(intervallId2);
       clear_screen();
       graph_picker();
+
 
     })
   } else if (link.textContent == "Alerts") {
