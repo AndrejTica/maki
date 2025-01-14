@@ -36,11 +36,9 @@ app = FastAPI(lifespan=lifespan)
 
 origins = [
     "http://127.0.0.1:8080",
-    "http://127.0.0.1:8080/data",
-    "http://127.0.0.1:8080/data/all",
+    "http://127.0.0.1:8000",
     "http://127.0.0.1:9000",
-    "http://127.0.0.1:9000/data",
-    "http://127.0.0.1:9000/data/all",
+    "http://localhost:9000",
 ]
 
 app.add_middleware(
@@ -64,17 +62,7 @@ def commit_and_add_time(session: SessionDep, data: Data) -> None:
     session.commit()
     session.refresh(data)
 
-@app.get("/")
-async def read_index():
-    return "Hello World"
-
-@app.post("/data/")
-def create_data(data: Data, session: SessionDep) -> Data:
-    commit_and_add_time(session, data)
-    return data 
-
-@app.get("/data/{data_type}/{date}/all")
-def read_data_all(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data]:
+def get_query(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data]:
     day: int = int(date.split("-")[2])
     month: int = int(date.split("-")[1])
     year: int = int(date.split("-")[0])
@@ -87,20 +75,24 @@ def read_data_all(data_type: Literal["temp", "co2"], date: str, session: Session
     )
     return session.exec(statement).all()
 
+
+@app.get("/")
+async def read_index():
+    return "Hello World"
+
+@app.post("/data/")
+def create_data(data: Data, session: SessionDep) -> Data:
+    commit_and_add_time(session, data)
+    return data 
+
+@app.get("/data/{data_type}/{date}/all")
+def read_data_all(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data]:
+    return get_query(data_type, date, session)
+
 @app.get("/data/{data_type}/{date}")
 def read_data(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Data | None:
     try:
-        day: int = int(date.split("-")[2])
-        month: int = int(date.split("-")[1])
-        year: int = int(date.split("-")[0])
-        statement = (
-            select(Data)
-            .where(Data.type == data_type)
-            .where(Data.year == year)
-            .where(Data.month == month)
-            .where(Data.day == day)
-        )
-        data = session.exec(statement).all()[-1]
+        data = get_query(data_type, date, session)[-1]
     except IndexError:
         print("No data!")
         return None
