@@ -132,6 +132,7 @@ async function create_line(sensor_type, line_div) {
 async function clear_screen(spare = true) {
   try { clearInterval(intervallId1) } catch (error) { }
   try { clearInterval(intervallId2) } catch (error) { }
+  try { clearInterval(intervallId3) } catch (error) { }
   try { Plotly.purge("gaugeDivTemp") } catch (error) { }
   try { Plotly.purge("gaugeDivCo2") } catch (error) { }
   try { Plotly.purge("lineDivTemp") } catch (error) { }
@@ -166,10 +167,20 @@ async function create_averages(date) {
   average_div_temp.style.color = "blue";
   average_div_temp.style.marginLeft = "100px";
   date_input.insertAdjacentElement("afterend", average_div_temp);
+
+}
+
+async function update_averages(date){
+  const average_temp = await getDataAverage("temp", date);
+  const average_temp_div = document.getElementById("averageDivTemp");
+  average_temp_div.innerText = `Average temperature: ${Math.round(average_temp * 100) / 100}`
+
+  const average_co2 = await getDataAverage("co2", date);
+  const average_co2_div = document.getElementById("averageDivCo2");
+  average_co2_div.innerText = `Average temperature: ${Math.round(average_co2 * 100) / 100}`
 }
 
 async function graph_picker() {
-  //<input type="date" id="start" name="trip-start" value="2018-07-22" min="2018-01-01" max="2018-12-31" />
   const text_div = document.createElement('div');
   text_div.id = "textDiv";
   text_div.innerText = "Select the date for the sensor data."
@@ -192,17 +203,16 @@ async function graph_picker() {
     create_averages(full_date);
     intervallId1 = setInterval(update_chart.bind(null, "line", "temp", full_date), 1000);
     intervallId2 = setInterval(update_chart.bind(null, "line", "co2", full_date), 1000);
-
+    intervallId3 = setInterval(update_averages.bind(null, full_date), 1000);
 
   })
-  //needs to wait for input first
-
 }
 
 const clickableLinks = document.querySelectorAll('#sidebar .links a');
 
 let intervallId1;
 let intervallId2;
+let intervallId3;
 clickableLinks.forEach((link) => {
   if (link.textContent == "Dashboard") {
     link.addEventListener("click", (event) => {
