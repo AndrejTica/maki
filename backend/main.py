@@ -1,4 +1,4 @@
-from typing import Annotated, Literal, Sequence, TypeVar, Union, dataclass_transform
+from typing import Annotated, Literal, Optional, Sequence, TypeVar, Union, dataclass_transform
 from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -68,18 +68,36 @@ def commit_and_add_time(session: SessionDep, data: Data) -> None:
     session.commit()
     session.refresh(data)
 
-def get_query(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data]:
-    day: int = int(date.split("-")[2])
-    month: int = int(date.split("-")[1])
-    year: int = int(date.split("-")[0])
-    statement = (
-        select(Data)
-        .where(Data.type == data_type)
-        .where(Data.year == year)
-        .where(Data.month == month)
-        .where(Data.day == day)
-    )
-    return session.exec(statement).all()
+def get_data(session: Session, data_type: Literal["temp", "co2"] | None, date: str | None) -> Sequence[Data]:
+    if not data_type and not date:
+        statement = (
+            select(Data)
+        )
+        return session.exec(statement).all()
+    elif data_type and not date:
+        statement = (
+            select(Data)
+            .where(Data.type == data_type)
+        )
+        return session.exec(statement).all()
+    elif data_type and date:
+        statement = (
+            select(Data)
+            .where(Data.type == data_type)
+            .where(Data.year == int(date.split("-")[0]))
+            .where(Data.month == int(date.split("-")[1]))
+            .where(Data.day == int(date.split("-")[2]))
+        )
+        return session.exec(statement).all()
+    elif not data_type and date:
+        statement = (
+            select(Data)
+            .where(Data.year == int(date.split("-")[0]))
+            .where(Data.month == int(date.split("-")[1]))
+            .where(Data.day == int(date.split("-")[2]))
+        )
+        return session.exec(statement).all()    
+    raise RuntimeError("this should not happen")
 
 
 @app.get("/")
@@ -91,38 +109,38 @@ def create_data(data: Data, session: SessionDep) -> Data:
     commit_and_add_time(session, data)
     return data 
 
-@app.get("/data/{data_type}/{date}/all")
-def read_data_all(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Sequence[Data] | None:
-    try:
-        return get_query(data_type, date, session)
-    except IndexError:
-        print("No data!")
-        return None
-
-@app.get("/data/{data_type}/{date}/average")
-def read_data_average(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> float | None:
-    try:
-        data = get_query(data_type, date, session)
-    except IndexError:
-        print("No data!")
-        return None
-    average = calc_average(data)
-    return average 
-
+@app.get("/data/{data_type}/{date}/{operator}")
 @app.get("/data/{data_type}/{date}")
-def read_data(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> Data | None:
+def data(data_type: Literal["temp", "co2"], 
+             session: SessionDep, 
+             date: str, 
+             operator: Literal["all", "average"] | None = None) -> Sequence[Data] | Data | float | None:
     try:
-        data = get_query(data_type, date, session)[-1]
+        data: Sequence[Data] = get_data(session, data_type, date)
     except IndexError:
-        print("No data!")
+        print(f"No data for the date {date}!")
         return None
-    return data 
+    if operator == "average":
+        return calc_average(data)
+    return data if operator == "all" else data[-1]
 
-@app.delete("/data/{data_type}/all")
-def delete_all_data(data_type: Literal["temp", "co2"], session: SessionDep) -> None:
-    """Delete all data of the specified type ('temp' or 'co2')."""
-    statement = select(Data).where(Data.type == data_type)
-    results = session.exec(statement).all()
+# @app.delete("/data/{data_type}/{date}/")
+# @app.delete("/data/")
+# def delete_all_data(session: Session,
+#              data_type: Literal["temp", "co2"] | None = None, 
+#              date: str | None = None) -> None:
+#     """Delete all data of the specified type ('temp' or 'co2')."""
+#     statement = select(Data).where(Data.type == data_type if data_type)
+#     results = session.exec(statement).all()
+#     for data in results:
+#         print(f"Data: {data} will be deleted")
+#         session.delete(data)
+#     session.commit()
+
+@app.delete("/data/{data_type}/{date}")
+def delete_data(data_type: Literal["temp", "co2"], date: str, session: SessionDep) -> None:
+    """Delete specified data of the specified type ('temp' or 'co2'), for a specific date."""
+    results: Sequence[Data] = get_data(session, data_type, date)
     for data in results:
         print(f"Data: {data} will be deleted")
         session.delete(data)
