@@ -100,7 +100,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode=production",
-    "start": "webpack serve --mode=production"
+    "start": "webpack serve --mode=production --host=165.22.18.157"
   },
   "keywords": [],
   "author": "",
