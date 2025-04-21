@@ -3,9 +3,9 @@ import Plotly from 'plotly.js-dist-min'
 async function getData(type, date, all) {
   let url;
   if (all) {
-    url = `http://64.226.123.247:8000/data/${type}/${date}/all`;
+    url = `http://64.226.123.247:80/data/${type}/${date}/all`;
   } else {
-    url = `http://64.226.123.247:8000/data/${type}/${date}`;
+    url = `http://64.226.123.247:80/data/${type}/${date}`;
   }
   try {
     const response = await fetch(url);
@@ -22,7 +22,7 @@ async function getData(type, date, all) {
 
 async function getDataAverage(type, date) {
   let url;
-  url = `http://64.226.123.247:8000/data/${type}/${date}/average`;
+  url = `http://64.226.123.247:80/data/${type}/${date}/average`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
