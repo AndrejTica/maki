@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy your application code
 COPY src/maki/ .
 
-EXPOSE 8000
+EXPOSE 80
 
 # Use CMD (or ENTRYPOINT) to run Uvicorn when the container starts
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
 
