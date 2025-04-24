@@ -5,7 +5,8 @@ from sqlmodel import join
 
 def send_value_to_endpoint(value, type):
     """Send a value to the endpoint as a POST request."""
-    url = "http://localhost:8000/data"  # Replace with your actual endpoint
+    # url = "http://64.226.123.247:80/data"  # Replace with your actual endpoint
+    url = "http://127.0.0.1:8000/data"  # Replace with your actual endpoint
     payload = {"value": value,"type": type}
     try:
         response = requests.post(url, json=payload)

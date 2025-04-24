@@ -1,14 +1,11 @@
 import Plotly from 'plotly.js-dist-min'
 
+console.log("API URL is:", process.env.URL_BACKEND);
+var urlBackend = process.env.URL_BACKEND;
+
 async function getData(type, date, all) {
-  let url;
-  if (all) {
-    url = `http://64.226.123.247:80/data/${type}/${date}/all`;
-  } else {
-    url = `http://64.226.123.247:80/data/${type}/${date}`;
-  }
   try {
-    const response = await fetch(url);
+    const response = await fetch(all ? `${urlBackend}/data/${type}/${date}/all` : `${urlBackend}/data/${type}/${date}`);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -21,10 +18,8 @@ async function getData(type, date, all) {
 }
 
 async function getDataAverage(type, date) {
-  let url;
-  url = `http://64.226.123.247:80/data/${type}/${date}/average`;
   try {
-    const response = await fetch(url);
+    const response = await fetch(`${urlBackend}/data/${type}/${date}/average`);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -177,7 +172,7 @@ async function update_averages(date) {
 
   const average_co2 = await getDataAverage("co2", date);
   const average_co2_div = document.getElementById("averageDivCo2");
-  average_co2_div.innerText = `Average temperature: ${Math.round(average_co2 * 100) / 100}`
+  average_co2_div.innerText = `Average CO2: ${Math.round(average_co2 * 100) / 100}`
 }
 
 async function graph_picker() {
