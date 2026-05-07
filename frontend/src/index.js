@@ -1,7 +1,6 @@
 import Plotly from 'plotly.js-dist-min'
 
-console.log("API URL is:", process.env.URL_BACKEND);
-var urlBackend = process.env.URL_BACKEND;
+var urlBackend = "http://164.92.225.252:80";
 
 async function getData(type, date, all) {
   try {

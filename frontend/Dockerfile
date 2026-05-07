@@ -1,11 +1,13 @@
 # --- STAGE 1: Build the application ---
-FROM node:18 AS build
+FROM node:24 AS build
 
 WORKDIR /app
 
 COPY package.json ./
 RUN npm install
 COPY . .
+
+ENV URL_BACKEND="http://142.93.103.77:8000"
 RUN npm run build
 
 # FROM nginx:alpine
@@ -18,4 +20,4 @@ RUN npm run build
 
 # Expose port 80 and start Nginx in the foreground
 EXPOSE 80
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "startDev"]
